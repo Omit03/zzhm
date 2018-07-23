@@ -1,0 +1,7 @@
+1、认识PHP-FIG（PHP通用性框架小组）
+
+   作用：制定一系列PHP开发的规范，这些规范是未来PHP框架所要遵循的规范
+
+   网址：www.php-fig.org
+
+   规范：www.gitbook.com/book/jifei/php-fig-standards/details

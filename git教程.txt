@@ -1,0 +1,117 @@
+      准备工作：下载路径https://gitforwindows.org/  一路next。  注册git 在线仓库的账号  国外 有www.github.com  国内 git.oschina.net。
+ 1、
+
+      打开 窗口 告诉是谁 git config --global user.name zjq003 
+
+      git config --global user.email 1049219433@qq.com
+
+      查看是否设置成功
+  
+      $ git config --list
+
+        filter.lfs.required=true
+
+        user.name=omit03
+        
+        user.email=1049219433@qq.com
+
+ 2、
+      $ git init 
+
+      多出来一个文件
+    
+      初始操作 git init 建立仓库
+ 
+      建立文件 （手动） 
+
+      git status （查看文件状态）
+
+      git add .   （将所有文件添加到暂存区）
+
+      git commit -m '1'  （将暂存区提交到本地仓库）
+ 3、
+     
+     $ git rm 123.txt  删除操作
+    
+       rm '123.txt'   
+
+      $ git commit -m '删除index'  （提交到本地仓库）
+ 
+      重点：每次操作都需要提交 保证
+
+ 4、将本地仓库同步到git远程仓库中
+
+     1、git clone https://github.com/Omit03/zzhm.git  （克隆远程仓库代码）
+
+     2、touch a.php touch b.php （新建文件）
+
+     3、git add . git commit -m '说明' （将暂存区文件 提交到本地仓库）
+
+     4、git push https://github.com/Omit03/zzhm.git master  （输入用户名和密码即可）
+
+    记得清空项目 管理内
+
+    也可以配置远程分支别名  如 git remote add XX如（wap）https://gitee.com/zjq03/waphm.git
+ 
+5、
+    团队合作 添加成员
+
+    新成员 需要操作  git clone https://gitee.com/zjq03/waphm.git
+
+    然后同样操作 别名不可用 需要新建
+6、
+    新成员 推送完代码 需要 拉去新代码  git pull wap master
+7、
+    查看日志 git log 好看版 git log --pretty=oneline
+
+    版本切换 git reset --hard 版本简称如 40c2  各个版本间随意切换
+
+    简称git reflog 简化
+8、
+    查看分支
+
+    git branch
+
+
+    新增分支 git branch XX 如（test） 切换分支 git checkout test
+
+    原则上  没处理一个都需要新建一个分支
+
+    场景 在处理 问题时 急需处理另外一个问题  
+ 
+    把当前为处理的代码 git diff  2、git add . 3、git commit -m '暂存'
+
+    然后切换 到master  git checkout master  然后再 新建分支  解决问题 合并到maser  git merge 加分支名（如test）
+
+    在切换到 未处理分支  如果修改同一个文件 一定是 解决冲突后 ）在合并（这时候解决 直接在master git diff git add . git commit -m )
+
+
+    心得 master 为主分支  所有代码只能从主分支 建立新的分支  在新分支修改 代码 然后合并 
+
+
+9、
+    远程仓库 
+
+    查看远程仓库 git remote
+
+    查看仓库地址 git remote -v
+10、
+
+    删除远程库别名
+
+    git remote remove <别名>
+11、
+
+    给分支取别名 git remote add origin git@gitee.com:zjq03/waphm.git  需要SSH
+
+12、
+
+    配置公钥 免每次输入密码
+
+    第一 ssh-keygen -t rsa -C "1049219433@qq.com"  接着一路回车 
+
+
+    配置公钥 遇到的坑 必须要在  设置 SSH 中配置 才会生效   谨记 git
+
+
+

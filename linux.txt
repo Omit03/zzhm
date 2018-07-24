@@ -1,0 +1,1502 @@
+1、修改临时IP  ifconfig eno16777736 172.32.1.67 netmask 255.255.255.0  重启网卡失效
+2、重启网卡的方式 
+      centos7  方式  systemctl restart network
+      centos6  方式  service  network restart
+3、新增多个临时IP
+  
+     ifconfig 网卡名称:0 第一个IP地址（netmask 子网掩码） --- 增加一个IP
+     ifconfig 网卡名称:1 第一个IP地址（netmask 子网掩码） --- 增加一个IP
+
+     如 ifconfig ens33:0 172.32.1.67 或者ifconfig ens33:1 172.32.1.68
+
+4、临时删除IP 
+    
+    ifconfig eno16777736:0 del 172.32.1.69
+
+5、永久修改IP(需root权限)
+   方法一  nmtui     光标来操作   最后要  systemctl restart network    此方法无效
+
+   方法二  vim /etc/sysconfig/network-scripts/ifcfg-eno16777736       此方法有效
+ 
+
+6、操作技巧  Tab 可自动补齐  如果没有 按两下 可以 显示全部 如 sys
+
+7、RHEL/CENTOS  linux 网络相关的配置文件
+  
+ cat /etc/resolv.conf    DNS 配置文件
+
+ cat /etc/hostname 设置 主机名
+
+ cat /etc/hosts 设置主机名和IP绑定信息
+
+8、vim 快捷键
+  
+     i  进入插入模式
+ 
+    修改完成以后 先按 esc 建  在输入   :wq  
+
+    :q! 表示不保存退出
+
+    set nu //可以查看行号
+    
+
+9、关闭防火墙并设置开机不启动
+
+  systemctl status firewalld.service  // 查看firewalld状态
+ 
+  systemctl stop firewalld  //关闭
+
+  systemctl start firewalld  //开启
+
+  systemctl disable firewalld  // 开机自动关闭  RHLE7
+ 
+  chkconfig --list|grep network  // 查看开机是否启动 RHLE6
+
+  systemctl enable firewalld  //开机自动启动
+
+10、临时和永久关闭Selinux(正式线上也是关闭的)
+
+  临时关闭 
+          [root@zzhmfe 桌面]# getenforce
+           Enforcing
+  永久关闭 vim /ect/selinux/config
+
+       改 7 SELINUX=enforcing   	前面的7 代表文档中的第七行
+
+       为 7 SELINUX=disabled            reboot  //重启服务
+       
+
+11、设置系统光盘开机自动挂载
+
+  [root@zzhmfe 桌面]# vim /etc/fstab   在文档最后 添加以红色内容
+   
+  进入编辑模式 
+  新增一行 
+   /dev/cdrom                                /mnt                    iso9660 defaults        0 0
+
+  添加完成后 如下
+       UUID=a919baf5-bc98-48d9-ad94-1b35196caa18 /                       xfs     defaults        0 0
+       UUID=a89c2843-d92b-4a00-881b-0f28b5568bcb /boot                   xfs     defaults        0 0
+       UUID=f499e3c4-edf4-41b2-94bd-ea6ff25632a0 swap                    swap    defaults        0 0
+       /dev/cdrom                                /mnt                    iso9660 defaults        0 0
+
+  验证是否成功挂载
+
+   三行命令  mount -a     第二 ls/mnt/   // 可以查看到此目录下有内容 说明挂载成功
+
+    [root@zzhmfe 桌面]# mount -a
+    mount: /dev/sr0 写保护，将以只读方式挂载
+    [root@zzhmfe 桌面]# ls /mnt/
+    addons  GPL       LiveOS      release-notes            RPM-GPG-KEY-redhat-release
+    EFI     images    media.repo  repodata                 TRANS.TBL
+    EULA    isolinux  Packages    RPM-GPG-KEY-redhat-beta
+
+12、配置本地YUM源
+
+  yum的一切配置信息都存储在一个叫yum.repos.d目录下的配置文件中 删除原有的文件  rm-rf /etc/yum.repos.d/*
+
+  创建一个新的yum源 配置文件，yum源配置文件的结尾必须以 .repo 
+    切换到 /etc/yum.repos.d
+   [root@zzhmfe yum.repos.d]# vim CentOS7.repo
+   [root@zzhmfe yum.repos.d]# cat CentOS7.repo 
+   [CentOS7]       //yum的ID 必须唯一
+   name=CentOS-server     //描述信息
+   baseurl=file:///mnt     /mnt 表示的是光盘挂载点 ./file: 后面是三个/
+   enabled=1         // 代表启用
+   gpgcheck=0        //取消验证
+
+    
+    [root@zzhmfe yum.repos.d]# yum clean all    //清空yum 缓存
+  
+     [root@zzhmfe yum.repos.d]# yum list     // 生成缓存列表
+
+     验证一下 yum -y install httpd          //安装apache
+
+13、创建可用实验快照
+
+14、 linux 常识类 以上所有内容包含 以 --》开始
+
+     --》 3.1.1 登录LINUX终端
+        1、  两种终端仿真器：1、GNOME 桌面的 CHOME Terminal ; 2、KDE桌面的Konsole Terminal
+          
+        2、  远程连接终端工具：Xshell,CRT,后期教
+
+        3、通过tty 命令看到当前所属的虚拟终端     
+
+        4、ctrl +shift +N 快捷 打开另外一个终端   终端字体放大: shift + ctrl 
++  加号。 终端字体缩小：ctrl + 减号
+        
+        5、相同一linux 服务器的另外终端通讯
+          [hemei@zzhmfe yum.repos.d]$ tty
+            /dev/pts/1
+           [hemei@zzhmfe yum.repos.d]$ echo 123
+           123
+           [hemei@zzhmfe yum.repos.d]$ echo 123 > /dev/pts/0    //此命令相另外终端通讯 当前是/dev/pts/1
+
+        6、向所有终端广播消息：系统十分钟后关机
+   
+           [root@zzhmfe yum.repos.d]# shutdown +10      //十分钟关机命令 需要root 权限
+
+           所有终端都能收到信息
+   
+           Broadcast message from root@zzhmfe.com (Tue 2018-07-03 13:11:15 CST):
+
+           The system is going down for power-off at Tue 2018-07-03 13:21:15 CST!
+   
+           [root@zzhmfe yum.repos.d]# shutdown -c       //取消关机  同样都能收到
+
+           重点  wall "aaaa"  // 此命令 可以向所有终端发送消息
+ 
+            3.1.2 认识SHELL(壳)
+
+              1、当前终端就属于shell的一种 
+  
+              2、如何检测是内部命令和外部命令 type  如
+                    @zzhmfe yum.repos.d]# type cat   
+                    cat 已被哈希 (/usr/bin/cat)    // 外部
+                    [root@zzhmfe yum.repos.d]# type pwd
+                    pwd 是 shell 内嵌        //内部
+              
+              3、通过SHELL,我们可以对LINUX实现那些操作或者管理
+
+               例如：
+           
+               对文件的管理（创建、删除、复制、修改）
+
+                     1、对用户的管理（添加、删除）
+      
+                     2、相关权限的管理（授权用户对相关文件的管理，比如增删 改查）
+ 
+                     3、对磁盘的管理（分区、raid、lvm）
+
+                     4、对软件的管理
+ 
+                     5、对网络的管理
+
+               4、shell 提示符“#” 与 "$"区别
+
+                  [hemei@zzhmfe 桌面]$ su root     代表普通用户
+
+                  [root@zzhmfe 桌面]#              代表root用户
+
+                  用户名  @ 主机名  当前所在目录 （~ 表示当前用户的家目录）--（#root/$普通用户）
+
+               5、认识 Bash Shell
+
+                查看所有shell
+
+                [root@zzhmfe 桌面]# cat /etc/shells
+                                  /bin/sh
+                                  /bin/bash
+                                  /sbin/nologin
+                                  /usr/bin/sh
+                                  /usr/bin/bash
+                                  /usr/sbin/nologin
+                                  /bin/tcsh
+                                  /bin/csh
+
+                 具体使用哪一种，取决于你用户配置，也就是说可以看一下/etc/passwd/文件的每一行的最后一个字段
+                  
+                 [root@zzhmfe 桌面]# head -1 /etc/passwd
+                 root:x:0:0:root:/root:/bin/bash           《----- 结束
+
+15、 LINUX 基本命令操作
+
+      在Linux中 使用一个命令，命令格式如下
+
+      命令 【选项】  【参数】
+
+      命令：具体执行的命令 比如 pwd、head
+ 
+      选项：会影响到命令的一些行为操作，通常以 --- 实现
+
+      参数：命令作用对象
+
+      1、基本命令只 --ls
+
+        作用：查看当前目录下有哪些文件（list）
+
+        语法：ls 目录/文件  如果什么也不加 那么查看的是当前目录下的内容
+
+        如 [root@zzhmfe ~]# ls -l     //查看详细信息
+              总用量 8
+              -rw-------. 1 root root 1661 6月  30 2020 anaconda-ks.cfg
+              -rw-------. 1 root root 1754 6月  30 14:21 initial-setup-ks.cfg
+
+        如 [root@zzhmfe ~]# ls -d /root/  //查看文件属tr性
+                           /root/
+                           [root@zzhmfe ~]# ls -ld /root/
+                           dr-xr-x---. 5 root root 4096 7月   3 14:10 /root/
+
+        如 [root@zzhmfe ~]# ls -lS /root/     //按文件大小排序
+                            总用量 8
+                            -rw-------. 1 root root 1754 6月  30 14:21 initial-setup-ks.cfg
+                            -rw-------. 1 root root 1661 6月  30 2020 anaconda-ks.cfg
+
+
+  - 文件类型  rw-------.文件权限 1 链接个数 root 文件所有者 root 用户所属组名 1754 文件大小    30 14:21上次修改的时间和日期 initial-setup-ks.cfg文件名称  
+
+   LINUX中 一切皆文件
+   
+   LINUX中 没有消息就是好消息
+
+   d:目录文件 l:链接文件 b:块设备文件 c: 字符设备文件 p:管道文件  -: 表示普通文件
+
+   ls .. 代表上级目录  ls. 代表当前目录  ls -a 可以查看隐藏目录 [root@zzhmfe ~]# ls -a.                .bash_history  .bashrc  .cshrc                .tcshrc
+
+  ls -l   等价于 ll  如
+
+       [root@zzhmfe ~]# ls -l
+       总用量 8
+       -rw-------. 1 root root 1661 6月  30 2020 anaconda-ks.cfg
+       -rw-------. 1 root root 1754 6月  30 14:21 initial-setup-ks.cfg
+       [root@zzhmfe ~]# ll
+       总用量 8
+       -rw-------. 1 root root 1661 6月  30 2020 anaconda-ks.cfg
+       -rw-------. 1 root root 1754 6月  30 14:21 initial-setup-ks.cfg
+
+
+     2、别名的使用 
+       以下别名为临时有效
+      [root@zzhmfe ~]# alias zjq='vim /etc/sysconfig/network-scripts/ifcfg-eno16777736'  //创建别名
+      [root@zzhmfe ~]# zjq                                                               //使用别名
+      [root@zzhmfe ~]# unalias zjq                                                       //删除别名
+
+      设置别名永久有效 
+
+
+       ==》 当前用户有效
+       [root@zzhmfe ~]# vim /root/.bashrc   #插入以下内容：
+       alias  zjq='vim /etc/sysconfig/network-scripts/ifcfg-eno16777736'
+
+       如果其他 已经打开的终端 可以用 source /root/.bashrc命令或者重启终端
+
+       ==》所有用户
+           
+          [hemei@zzhmfe ~]$ vim /etc/bashrc   # 光标到 最后插入以下内容
+           alias  zjq='vim /etc/sysconfig/network-scripts/ifcfg-eno16777736'
+
+
+     2、基本语法之  cd
+
+            cd 切换目录 
+
+            语法：cd 目录 
+            说明：直接输入cd 表示回到当前用户的宿主（家）目录
+  
+            [hemei@zzhmfe home]$ cd ..     //到父级目录
+          
+            [hemei@zzhmfe /]$ cd      //到家 目录
+   
+            [hemei@zzhmfe ~]$ cd -     //切换到 切换前目录
+
+     3、基本语法之 history
+
+         命令：history
+
+         4个快速查找Liunx历史命令的技巧
+  
+         方法一  光标下上键
+
+         方法二  ctrl + r 然后 输入某条命令的关键字   然后找出来对应的命令 按右光标键
+
+         方法三 ！数字   //执行历史行中第N条命令
+
+         方法四 ！字符串  //搜索历史命令中最近一天以 XX 开头的命令  例如 !vim 不建议用
+
+     4、Linux 下快捷键
+
+        都用Ctrl + 下面单词 
+
+         Ctrl + C 终止前台运行程序 如 ping www.baidumcin    想停止按下Ctrl + c
+
+         Ctrl + D 退出 等价于 exit
+
+         Ctrl + L 清屏与 clear
+
+         !$ 引用上一个命令的最后一个参数
+    
+         
+
+16、系统时间管理
+
+     [root@zzhmfe hemei]# hwclock      //查看硬件时间
+     2020年07月04日 星期六 20时23分35秒  -0.911578 秒
+     [root@zzhmfe hemei]# date         //查看系统时间
+     2018年 07月 03日 星期二 18:36:20 CST
+
+      UTC  时间标准时间    GMT  格林尼治时间   GST 中国标准时间
+
+     1、如何修改 系统时间
+
+      date 命令相关参数
+
+      date  --help
+
+          -s,               把时间设为字符串所描述的时间
+
+         [root@zzhmfe 桌面]# date -s "2018-07-05 08:17:24"
+
+         %F	完整日期格式，等价于 %Y-%m-%d
+   
+         [root@zzhmfe 桌面]# date "+%F"
+         
+         2018-07-05
+
+         %G	ISO-8601 格式年份 (参见%V)，一般只和 %V 结合使用
+         %h	等于%b
+         %H	小时(00-23)
+         %I	小时(00-12)
+         %j	按年计的日期(001-366)
+         %k   hour, space padded ( 0..23); same as %_H
+         %l   hour, space padded ( 1..12); same as %_I
+         %m   month (01..12)
+         %M   minute (00..59)
+         %n	换行
+         %N	纳秒(000000000-999999999)
+         %p	当前locale 下的"上午"或者"下午"，未知时输出为空
+         %P	与%p 类似，但是输出小写字母
+         %r	当前locale 下的 12 小时时钟时间 (如：11:11:04 下午)
+         %R	24 小时时间的时和分，等价于 %H:%M
+         %s	自UTC 时间 1970-01-01 00:00:00 以来所经过的秒数
+         %S	秒(00-60)
+         %t	输出制表符 Tab
+         %T	时间，等于%H:%M:%S
+         %u	星期，1 代表星期一
+         %U	一年中的第几周，以周日为每星期第一天(00-53)
+         %V	ISO-8601 格式规范下的一年中第几周，以周一为每星期第一天(01-53)
+         %w	一星期中的第几日(0-6)，0 代表周一
+         %W	一年中的第几周，以周一为每星期第一天(00-53)
+         %x	当前locale 下的日期描述 (如：12/31/99)
+         %X	当前locale 下的时间描述 (如：23:13:48)
+         %y	年份最后两位数位 (00-99)
+         %Y	年份
+
+
+
+17、帮助命令使用
+
+    遇到命令不知道添加那个参数，可以使用命令帮助查看相关介绍，常用的查看帮助信息命令有如下几个
+
+     1、 man 命令 ：查看手册页或者命令描述
+
+        [zjq@zzhmfe 桌面]$ man find
+      
+      man 命令查看帮助时 支持上翻下翻，搜索（直接输入斜线），退出用q
+
+     2、使用 -h 或者 --help 查看命令选项
+
+    [zjq@zzhmfe 桌面]$ find -h
+    [zjq@zzhmfe 桌面]$ vim --help
+    VIM - Vi IMproved 7.4 (2013 Aug 10, compiled Jan 30 2014 10:56:39)
+
+18、开关机命令及7个启动级别
+
+    常用关机命令、及重启命令
+
+    shutdown
+
+        作用：关机、重启、定时关机
+       
+        语法：shutdown 【选项】 
+
+        参数：
+         
+        [root@zzhmfe 桌面]# shutdown -h +10          //十分钟关机
+    
+        [root@zzhmfe 桌面]# shutdown -c              // 取消
+   
+        [root@zzhmfe 桌面]# shutdown -r 22:23        //设置具体时间重启
+
+        [root@zzhmfe 桌面]# shutdown -h 23:22        //设置具体时间关机
+ 
+        [root@zzhmfe 桌面]# shutdown -h now          //马上关机
+
+
+ 
+   
+     init 
+
+        作用：切换系统运行级别
+
+        语法：init 0-6
+
+        Linux 7个级别
+
+        0 系统停机模式，系统默认运行级别不能设置为0，否则不能正常启动 机器关的
+
+        1 单用户模式，root权限，用于系统维护，禁止远程登录，就像windows下的安全模式登录
+
+        2 多用户模式，没有NFS和网络支持
+
+        3 完整的多用户文本模式，有NFS和网络，登陆后进入控制台命令行模式
+
+        4、系统未使用，保留一般不用，在一些特殊情况下可以用来做一下事情 ，例如在笔记本电脑电池用尽时 到这个模式来做一些设置
+     
+        5、图形化模式，登陆后进入图形GUI模式，X Window系
+     
+        6、重启模式，默认运行级别不能设为6，否则不能正常启动。运行init 6 机器就会重启
+
+        例
+         [root@zzhmfe ~]# init 0    //关机
+    
+         [root@zzhmfe ~]# init 3    //进入3级别字符界面
+
+         [root@zzhmfe ~]# init 5    //进入5级别图形界面
+
+         设置默认的运行界别
+
+         centos7 不再使用 /etc/initab 文件进行默认的启动级别配置 而使用比sysvinit的运行级更为自由的target
+   替代
+         第3 运行级用 multi-user.target 替代
+         
+         [root@zzhmfe ~]# systemctl set-default multi-user.target          然后reboot重启 
+
+         第5 运行级用 graphical.target 替代
+
+         [root@zzhmfe ~]# systemctl set-default graphical.target       然后reboot重启 
+
+         [root@zzhmfe ~]# runlevel
+          
+         3 5       //表示从3级别切换到了5级别
+  
+         [root@zzhmfe ~]# systemctl get-default           //查看当前默认的启动级别
+         graphical.target
+
+
+
+        reboot
+
+        poweroff
+
+
+19、 实战：设置来电自动开机
+
+第四章  文件的基本管理和XFS文件系统备份恢复
+
+20、Linux系统目录结构和相对/绝对路径
+
+     使用 tree 命令查看linux 目录结构，这个命令默认是没有安装的，需要手动安装一下
+
+     [root@zzhmfe ~]# mount /dev/sr0 /media/
+      mount: /dev/sr0 写保护，将以只读方式挂载
+     [root@zzhmfe ~]# rpm -ivh /media/Packages/tree-1.6.0-10.el7.x86_64.rpm 
+
+     [root@zzhmfe ~]# tree /tmp/            //查看/tmp 目录结构
+
+     [root@zzhmfe ~]# ls /
+     bin   dev  home  lib64  mnt  proc  run   srv  tmp  var
+     boot  etc  lib   media  opt  root  sbin  sys  usr
+  
+     
+     /  处于linux 系统树结构的最顶端，它是linux 文件系统的入口，所有的目录、文件、设备都在 /下
+
+     /bin  bin是Binary的缩写，常用的二级制命令目录 如ls cp mkdir cut 等 和/user/bin类一些用户级gnu工具
+
+     /boot 存放的系统启动启动相关的文件 例如 kernel.grub （引导装载程序）
+
+     /dev  dev是Device 的缩写、设备文件目录 比如声卡 磁盘  在linux中 一切都被看做文件 终端设备 磁盘等等都被看做文件
+
+     如 设备文件 /dev/sda, /dev/sda1  /dev/tty1  /dev/tty2   
+
+     /etc  常用系统及二进制安装包配置文件默认路径和服务器启动命令目录
+
+           passwd 用户信息文件
+
+           shadow 用户密码文件
+
+           group 存储用户组信息
+
+           fstab 系统开机启动自动挂载分区列表
+    
+           hosts 设定用户自己的IP与主机名对应的信息
+
+       /home  普通用户的家目录默认存放目录
+
+       /lib  库文件存放目录 函数库目录
+
+       /mnt 及 /media 一般用来临时挂载存储设备的挂载目录 比如有 cdrom、U盘等目录
+
+       /opt  表示的是可选择的意思，有些软件包也会被安装到这里
+
+       /proc 操作系统运行时，进程（正在运行中的程序）信息及内核信息（比如cpu、硬盘分区。内存信息等）在这里 /proc目录 是伪装的文件系统proc的挂载目录。proc 并不是
+           真正的文件系统。是一个虚拟的目录 它是系统内存的映射，可以通过访问这个目录来获取系统信息 也是这个目录的内容不再硬盘里而是在内存里
+
+          查看咱们的内存信息，CPU信息
+
+          cat /proc/meminfo               |  grep "Mem"
+
+          cat /proc/cpuinfo     //经常
+
+       /sys  系统目录，存放硬件信息的相关文件
+
+       /run  运行目录，存放的事系统运行时的数据  比如进程的PID文件
+
+       /srv  服务目录，存放的事我们本地服务的相关文件
+ 
+       /sbin 大多数涉及系统管理的命令都存放在该目录中，它是超级权限用户root的可执行命令存放地 ，普通用户无权限执行这个目录下的命令
+
+      凡是目录sbin 中包含的命令都是root 权限才能执行的
+
+      /tmp   改目录用于存放临时文件，有时用户运行程序的时候，才会产生一些临时文件. /tmp  就是用来存放临时文件的。/var/tmp 目录金和改目录的作用是相似的 不能存放重要数据 他的权限比较特殊
+
+     [zjq@zzhmfe 桌面]$ ls -ld /tmp
+
+     drwxrwxrwt. 26 root root 4096 7月   6 14:58 /tmp     drwxrwxrwt 最末尾的t 代表粘滞位(sticky bit)目录的sticky
+
+     这个目录的文件只能被owner 和root 删除
+
+       /var  系统运行和软件运行时产生的日志信息，该目录的内容是经常变动的，存放的事一些变化的文件，比如 /var/log目录用来存放系统日志的目录 还有mail 、/var/spool/cron
+
+      /usr   存放应用程序和文件
+
+              /usr/bin   普通用户使用的应用程序
+
+              /usr/sbin   管理员使用的应用程序
+
+              /usr/lib  库文件 Glibc（32位）
+
+              /usr/lib64  库文件Glibc
+
+      /lib及lib64 都在/usr/目录    各类库文件 注 lib***.a 是静态库    lib***.so 是动态库
+
+         静态库在编译时被加载到二进制文件中  动态库在运行时加载到进程的内存空间中 简单的说，这些库就是为了让你的程序能够正常编译运行的 其实就类似于win中的.dll文件 几乎所有的应用程序都需要用到这些共享库
+
+
+21 绝对路径和相对路径
+
+   绝对路径：在Linux中 绝对路径就是从 “/”开始的  比如/usr、 /etc/passwd 如果一个路径是从‘/’开始的 它一定是绝对路径
+
+    相对路径：相对于当前路径是以 .或者 ..开始的
+
+22  文件的管理
+
+    文件管理方式有多种
+
+    改变目录 ：cd
+
+    创建/修改/移动/删除   touch  madir mv vi rm cp
+
+    
+    1、创建文件和文件夹
+
+       命令之：touch
+
+       作用：常用来创建空文件，如果文件存在，则修改这个时间文件的时间
+
+       如：[root@zzhmfe opt]# touch a.txt     //创建一个文件
+
+           [root@zzhmfe opt]# touch a1.txt a2.txt   //创建两个文件
+
+           [root@zzhmfe opt]# touch a{1..3}        //创建多个文件
+
+          [root@zzhmfe /]# ll /etc/passwd
+           -rw-r--r-- 1 root root 2317 7月   4 17:44 /etc/passwd
+           [root@zzhmfe /]# stat /etc/passwd     //查看文件具体属性
+           文件："/etc/passwd"
+            大小：2317      	块：8          IO 块：4096   普通文件
+          设备：803h/2051d	Inode：18528457    硬链接：1
+          权限：(0644/-rw-r--r--)  Uid：(    0/    root)   Gid：(    0/    root)
+          最近访问：2018-07-10 17:08:49.144999796 +0800
+          最近更改：2018-07-04 17:44:35.239035984 +0800
+          最近改动：2018-07-04 17:44:35.240035984 +0800
+          创建时间：-
+
+              注 :
+                  访问时间：atime 查看时间 cat a.txt
+
+                  修改时间：mtime 修改内容 vim a.txt
+
+                  改变时间：ctime  文件属性 比如权限 change time  chmod + x a.sh
+
+           [root@zzhmfe /]#  touch -d '20180712 12:30' ccc.txt   //可以指定一个时间
+
+           [root@zzhmfe /]# ll ccc.txt 
+                                    -rw-r--r-- 1 root root 0 7月  12 2018 ccc.txt
+
+
+     2、使用vim和重定向创建一个新文件
+
+        用vim 命令创建一个新文件
+        
+          如：[root@zzhmfe opt]# vim a1.txt
+
+        用重定向创建一个新文件
+
+          如：[root@zzhmfe opt]# echo fffff > uuu.txt
+
+     3、命令之 mkdir
+
+        作用：创建目录
+     
+        语法：mkdir (选项）文件名
+
+        [root@zzhmfe opt]# mkdir dir1       //创建一个文件夹
+
+        [root@zzhmfe opt]# mkdir dir4 dir5 /home/dir6    //创建多个文件夹
+
+        [root@zzhmfe opt]# mkdir -p a/b/c        //创建 a文件夹下的b 文件夹下的C 文件夹
+
+     4、删除文件和目录
+
+      用到命令：rm
+
+      作用：可以删除一个目录中的一个或者多个文件或目录，对于链接文件，只是删除整个链接文件，而原文件保持不变的
+
+      语法：rm(选项）处理对象
+
+      选项：-f 强制删除，没有提示 
+ 
+        如：[root@zzhmfe opt]# rm -f a.txt  //删除文件
+
+           -r 删除目录 
+
+        如 [root@zzhmfe opt]# rm -r dir1    //删除目录
+
+           rm -rf  （慎用，一定要在删除以前确认一下所在目录，防止误删除重要数据）
+  
+         如[root@zzhmfe opt]# rm -rf dir2      
+
+     5、复制文件
+
+      命令 ：cp  原文件/目录  目录文件/目录
+
+      选项：-R/r  递归处理，将指定目录下所有文件与子目录一并处理、复制目录选用
+
+      如[root@zzhmfe opt]# cp dir3/a.txt  /opt/    // 复制文件
+
+        [root@zzhmfe opt]# cp -r /opt/dir3/b /opt/   //复制目录
+
+     6、移动文件
+
+        如第一种  只移动
+           [root@zzhmfe opt]# ls
+            a3  a.txt  b  dir3  dir4  dir5  rh
+           [root@zzhmfe opt]# mv a.txt dir4
+           [root@zzhmfe opt]# ls
+           a3  b  dir3  dir4  dir5  rh
+
+        如 第二种 移动并改名
+
+           [root@zzhmfe dir4]# ls
+                              a.txt
+           [root@zzhmfe dir4]# mv a.txt /opt/ccc.txt   
+
+        
+
+  
+     7、查看文件
+
+        1、 命令之 cat
+
+        语法：cat 文件
+
+        作用：查看文件内容，一次显示整个文件的内容
+
+        如 [root@zzhmfe /]# cat /etc/passwd   
+
+        2、命令之：more
+
+          作用：以分页形式显示文件内容
+
+          语法：more 文件名
+
+          说明：按下回车刷新一行，按下空格刷新一屏 输入q 键 退出
+
+           如[root@zzhmfe /]# more /etc/passwd
+
+         3、命令之：less
+
+            作用：和more 一样
+
+            语法：less+文件名
+
+            说明：linux中more 和less的区别
+
+            more:不支持后退 但几乎不需要加参数 空格键是向下翻页，Enter键是向下翻一行，不能后退
+
+            less: 只收前后翻滚，即可以向上翻页（pageup按键），也可以向下翻页（pagedown按键）Enter 是向下翻一行 空格键是一
+屏   输入q 退出
+
+            如 [root@zzhmfe /]# less /etc/passwd
+
+         4、命令之 ：head
+
+            作用：用于显示文件的开头内容,在默认情况下，head 命令显示文件的头10行内容
+
+            语法：head (选项） 文件名
+
+            参数：-n 显示从文件头开始的行数
+
+            如 [root@zzhmfe /]# head /etc/passwd     //显示前十行
+
+            如 [root@zzhmfe /]# head -n 3 /etc/passwd  //显示前三行 
+
+         5、命令之 ：tail
+
+            作用：用于显示文件中尾部内容。默认在屏幕上显示指定文件的末尾10行
+
+            语法 tail (选项）文件名
+
+            -n 显示文件尾部多少行内容（n 为数字）
+
+            -f 动态显示数据（不关闭），常用来查看日志
+
+            [root@zzhmfe /]# tail -n 3 /var/log/secure   //查看最后三行记录
+
+            [root@zzhmfe /]# tail -f /var/log/secure    //在一个终端执行此命令动态查看文件内容
+
+            [root@zzhmfe /]# ssh root@172.32.1.63      //在另外一个终端远程登录linux
+
+            [root@zzhmfe /]# tail -f /var/log/secure     //可以动态查看登录成功的日志
+
+            
+23、实战 ：xfs 文件系统的备份和恢复
+
+    1、XFS 提供了 xfsdump 和xfsrestore 工具协助备份XFS 文件系统中的数据。xfsdump 按inode 顺序备份XFS
+文件系统。
+
+    centos7 选择xfs格式作为默认文件系统，而且不再使用以前的ext,仍然之前的ext4,xfs专为大数据产生，
+每个单个文件系统最大可以支持8eb，单个文件可以支持16tb,不仅数据量大。而且扩展性高，还可以通过
+xfsdump,xfsrestore来备份和恢复。原始数据备份方法：cp
+
+    与传统的UNIX文件系统不同，XFS不需要在备份前被卸载；对使用中的XFS系统做备份就可以保证镜像的一致
+性（相当于热备）。XFS的备份和恢复过程是可以被终端然后继续的（类似于断点续传），无需冻结文件系统，xfsdump 甚至提
+供了高性能的多线程备份操作 ---- 它把一次dump 拆分成多个数据流，每个数据流可以被发往不同的目的地
+    
+    0 级别代表         完全备份
+
+    1 到9 级别代表：   增量备份
+
+   扩展 ：
+
+       完全备份：每次都把指定备份目录完整的复制一遍，不管目录下的文件有没有变化
+
+       增量备份：每次将之前（第一次，第二次 直到前一次）做过备份之后有变化文件
+
+       差异备份：每次都将第一次完整备份以后有变化的文件进行备份
+
+   
+     2、环境准备
+
+        实验环境
+      
+              系统CENTOS7.4 添加一块虚拟硬盘（准备一个测试分区）
+
+        正常使用一块磁盘过程如下：
+
+        添加磁盘大小20G--》分区--》格式化--》挂载
+
+        对新添加的磁盘格式化
+
+         如
+          [root@zzhmfe 桌面]# fdisk /dev/sdb     // 指定分区的设备
+ 
+         欢迎使用 fdisk (util-linux 2.23.2)。
+
+          更改将停留在内存中，直到您决定将更改写入磁盘。
+ 
+         使用写入命令前请三思。
+
+          Device does not contain a recognized partition table
+  
+        使用磁盘标识符 0x753d43ae 创建新的 DOS 磁盘标签。
+
+          命令(输入 m 获取帮助)：n               //创建一个新的分区
+ 
+          Partition type:
+  
+          p   primary (0 primary, 0 extended, 4 free)
+             e   extended
+    
+          Select (default p): p                  //创建一个主分区
+     
+          分区号 (1-4，默认 1)：1
+ 
+          起始 扇区 (2048-41943039，默认为 2048)：
+ 
+         将使用默认值 2048
+   
+          Last 扇区, +扇区 or +size{K,M,G} (2048-41943039，默认为 41943039)：+1G   //指定分区大小
+ 
+          分区 1 已设置为 Linux 类型，大小设为 1 GiB
+
+          命令(输入 m 获取帮助)：p                          //打印分区表
+
+          磁盘 /dev/sdb：21.5 GB, 21474836480 字节，41943040 个扇区
+
+          Units = 扇区 of 1 * 512 = 512 bytes
+ 
+          扇区大小(逻辑/物理)：512 字节 / 512 字节
+ 
+          I/O 大小(最小/最佳)：512 字节 / 512 字节
+  
+          磁盘标签类型：dos
+   
+          磁盘标识符：0x753d43ae
+ 
+          设备 Boot      Start         End      Blocks   Id  System
+          /dev/sdb1            2048     2099199     1048576   83  Linux
+
+          命令(输入 m 获取帮助)：w            //保存
+          The partition table has been altered!
+
+          Calling ioctl() to re-read partition table.
+          正在同步磁盘。
+          [root@zzhmfe /]# ls /dev/sdb*
+          
+          /dev/sdb  /dev/sdb1
+
+
+           2、格式化分区，并进行挂载
+
+           [root@zzhmfe 桌面]# mkfs.xfs /dev/sdb1
+            meta-data=/dev/sdb1              isize=256    agcount=4, agsize=65536 blks
+                     =                       sectsz=512   attr=2, projid32bit=1
+                     =                       crc=0        finobt=0
+            data     =                       bsize=4096   blocks=262144, imaxpct=25
+                     =                       sunit=0      swidth=0 blks
+            naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+            log      =internal log           bsize=4096   blocks=2560, version=2
+                     =                       sectsz=512   sunit=0 blks, lazy-count=1
+            realtime =none                   extsz=4096   blocks=0, rtextents=0
+            [root@zzhmfe 桌面]# mkdir /sdb1
+
+            [root@zzhmfe 桌面]# mount /dev/sdb1 /sdb1
+
+            3、准备 备份测试文件
+
+             [root@zzhmfe /]# cd sdb1/
+             [root@zzhmfe sdb1]# ls
+             [root@zzhmfe sdb1]# cp /etc/passwd ./
+             [root@zzhmfe sdb1]# ls
+                 passwd
+             [root@zzhmfe sdb1]# mkdir test
+             [root@zzhmfe sdb1]# ls
+                 passwd  test
+             [root@zzhmfe sdb1]# touch test/a
+             [root@zzhmfe sdb1]# tree /sdb1/
+                    /sdb1/
+                          ├── passwd
+                          └── test
+                               └── a
+
+      3、备份
+
+        1、备份整个分区。（这个功能就像是虚拟机的快照，服务器被黑后，进行快速恢复）
+
+         xfsdump -f 备份存放位置  要备份路径或设备文件
+
+         注意：备份的路径这里不能写成 /sdb1/  最后的 /不能有  可以是/dev/sdb1 或 /sdb1
+
+     
+         [root@zzhmfe sdb1]# xfsdump -f /opt/dump_sdb1 /dev/sdb1
+         xfsdump: using file dump (drive_simple) strategy
+         xfsdump: version 3.1.4 (dump format 3.0) - type ^C for status and control
+
+         ============================= dump label dialog ==============================
+
+         please enter label for this dump session (timeout in 300 sec)
+         -> dump_sdb1                      //指定备份回话标签
+         session label entered: "dump_sdb1"
+
+         --------------------------------- end dialog ---------------------------------
+
+        xfsdump: level 0 dump of zzhmfe.com:/sdb1
+        xfsdump: dump date: Thu Jul 12 11:01:16 2018
+        xfsdump: session id: 65844017-a714-4d79-993b-a570badc6cb3
+        xfsdump: session label: "dump_sdb1"
+        xfsdump: ino map phase 1: constructing initial dump list
+        xfsdump: ino map phase 2: skipping (no pruning necessary)
+        xfsdump: ino map phase 3: skipping (only one dump stream)
+        xfsdump: ino map construction complete
+        xfsdump: estimated dump size: 25856 bytes
+        xfsdump: /var/lib/xfsdump/inventory created
+
+        ============================= media label dialog =============================
+
+        please enter label for media in drive 0 (timeout in 300 sec)
+         -> sdb1                        // 指定设备标签
+        media label entered: "sdb1"
+
+        --------------------------------- end dialog ---------------------------------
+
+       xfsdump: creating dump session media file 0 (media 0, file 0)
+       xfsdump: dumping ino map
+       xfsdump: dumping directories
+       xfsdump: dumping non-directory files
+       xfsdump: ending media file
+       xfsdump: media file size 25552 bytes
+       xfsdump: dump size (non-dir files) : 2592 bytes
+       xfsdump: dump complete: 33 seconds elapsed
+       xfsdump: Dump Summary:
+       xfsdump:   stream 0 /opt/dump_sdb1 OK (success)
+       xfsdump: Dump Status: SUCCESS
+       [root@zzhmfe sdb1]# 
+
+      2、指定备份时内容免交互操作 ，方便后期做定时备份
+
+        [root@zzhmfe /]# xfsdump -f /opt/dump_passwd /sdb1 -L dump_passwd -M media1
+
+        -L  ：xfsdump 会记录每次备份的session 标头 ，这里可以填写针对此文件系统的简易说明
+
+        -M  ：xfsdump 可以记录存储媒体的标头，这里可以填写此媒体的简易说明
+         
+
+
+      3、查看备份信息与内容
+
+        备份成功后，我们就可以在 /var/lib/xfsdump/inventory 目录下看的生成的档案信息
+
+        命令 ：[root@zzhmfe sdb1]# ls /var/lib/xfsdump/inventory/      //文件记录的具体位置
+
+               [root@zzhmfe sdb1]# xfsdump -I                          //快捷方式查看备份信息
+
+      4、指定只备份分区中某个目录
+
+         参数：-s 文件路径 只对指定的文件进行备份 -s 指定时，路径写的是相对路径（-s 可是是文件或者目录）
+         
+         [root@zzhmfe sdb1]# xfsdump -f /opt/dump_grob2 -s grub2/grub.cfg /boot -L dump_grub2 -M boot-sda1
+
+        
+ 
+         测试恢复：先删除之前创建的内容
+       
+
+         [root@zzhmfe /]# cd sdb1/
+ 
+         [root@zzhmfe sdb1]# ls
+   
+          passwd  test
+ 
+         [root@zzhmfe sdb1]# pwd
+            /sdb1
+         [root@zzhmfe sdb1]# rm -rf ./*       //删除当前目录下所有文件
+
+
+       5、文件系统恢复
+
+          语法：xfsrestore -f  指定恢复文件的位置，指定存放恢复后的文件的路径
+
+          [root@zzhmfe opt]# xfsrestore -f /opt/dump_sdb1 /sdb1
+
+           查看恢复情况
+
+           [root@zzhmfe sdb1]# tree /sdb1/
+                       /sdb1/
+                      ├── passwd
+                      └── test
+                           └── a
+
+           恢复单个文件如下：
+
+           [root@zzhmfe /]# mkdir /var/test/
+
+           [root@zzhmfe /]# xfsrestore -f /opt/dump_grub2 -s grub2/grub.cfg /var/test/ 
+
+           [root@zzhmfe /]# xfsrestore -f /opt/dump_grub2 -s grub2/var/test/   //恢复目录
+            
+
+               注：
+
+           使用xfsdump时，请注意下面 下面的几个限制：
+
+           1、xfsdump 不支持没有挂载的文件系统备份！所以只能备份已挂载的！
+
+           2、xfsdump 必须使用root的权限才能操作（涉及文件系统的关系）
+
+           3、xfsdump 只能备份XFS文件系统
+
+           4、xfsdump 备份下来的数据（档案或存储媒体）只能让xfsrestore解析
+
+           5、xfsdump 是透过文件系统的UUID来分辨各个备案档的，因此不能备份两个具有相同UUID的文件系统
+
+
+   4、增量备份
+
+        概念 
+
+             增量备份是指在一次全备份或者上一次增量备份后，以后每次的备份只需备份与前一次相比增加或者被修改的文件，这就意味着，第一次增量备份的对象是进行全备后所产生的增加和修改的文件；
+
+         第二次增量备份的对象是进行第一次增量备份后所产生的增加和修改文件，以此类推；
+
+        优缺点
+
+        优点：没有重复的备份数据，因此备份的数据量不大，备份所需的时间很短。
+
+        缺点：数据恢复相对比较麻烦，它需要上一次全备份和所有增量备份的内容才能够完全恢复成功，并且它们必须沿着从全备份到依次增量备份的时间顺序逐个反推恢复，因此可能会延长的恢复时间
+
+
+      实战：增量备份文件系统
+
+           准备一个备份目录进行备份
+           [root@zzhmfe /]# tree  /sdb1
+           /sdb1/
+          ├── passwd
+          └── test
+             └── a
+
+          对上面的内容进行第一次全备
+
+        [root@zzhmfe /]# xfsdump -f /opt/test-full /sdb1 -L test-full -M media0
+
+        增加一些内容，然后进行第一次增量备份
+
+        [root@zzhmfe sdb1]# touch 1.txt  2.txt
+
+        [root@zzhmfe sdb1]# ls
+  
+        1.txt  2.txt  passwd  test
+
+        [root@zzhmfe sdb1]# xfsdump -l 1 -f /opt/test-back1 /sdb1 -L test-back1 -M media0
+
+        做一个等级为1的备份
+
+        再次增加内容，然后进行level 2级别的增量备
+
+        [root@zzhmfe test]# touch a.txt b.txt
+  
+        [root@zzhmfe test]# ls
+ 
+        a  a.txt  b.txt
+
+        [root@zzhmfe test]# xfsdump -l 2 -f /opt/test-back2 /sdb1 -L test-back2 -M media2     //第二次进行备份
+
+        [root@zzhmfe /]# rm -rf /sdb1/*  删除备份原文件 已备进行备份
+
+     
+     现在进行恢复，想要恢复全部数据，包括新添加的文件，如何恢复？
+
+     步骤：
+
+          1、先恢复完全备份
+
+          2、情况1：恢复最后一次增量备份（如果两次增量备份都是1级的，所以只需要恢复最后一个增量就可以了）
+
+          3、情况2：如果你做的是第一次是1级备，第二做的是2级备，那么你在恢复的时候就需要先恢复完全备份，然后是1级备，最后是2级备
+
+
+
+          [root@zzhmfe /]# xfsrestore -f /opt/test-full  /sdb1/      //恢复完全备份
+
+               
+          [root@xuegod63 ~]# xfsrestore -f /opt/test-back2 /sdb1/  #故意先恢复back2，查看
+
+          [root@xuegod63 ~]# tree /sdb1/  #查看，发现没有1.txt ,2.txt 
+    
+           /sdb1/
+              ├── passwd
+              └── test
+                ├── a
+                ├── a.txt
+                └── b.txt 
+ 
+          [root@xuegod63 ~]# xfsrestore -f /opt/test-back1 /sdb1/      //恢复back1 
+
+          [root@xuegod63 ~]# tree /sdb1/          //到此，数据恢复成功
+ 
+
+24、vim主要模式介绍，vim 命令模式
+
+       1、  确保系统已经安装了VIM工具
+
+         [root@zzhmfe /]# which vim
+
+         /usr/bin/vim
+
+         [root@zzhmfe /]# rpm -qf `which vim`
+ 
+         vim-enhanced-7.4.160-1.el7.x86_64
+  
+         [root@zzhmfe /]# rpm -qf `which vi`
+ 
+         vim-minimal-7.4.160-1.el7.x86_64
+ 
+         扩展：
+ 
+                 问：vi和vim是同一个软件包安装的吗?
+
+                 答：NO，vim是vi的增加版，最明显的区别就是vim可以语法加亮，它完全兼容vi
+    
+   
+
+        首次进入文件    ---- 命令模式
+
+        出现 “Insert” ---- 编辑模式
+
+        输入:          ---- 命令行模式
+
+        A：从编辑模式到命令行模式怎样切换?	
+
+ 	编辑模式->esc->命令模式->: ->命令行模式
+
+        B：字符操作(怎样进入编辑模式?)
+
+	进入编辑模式 a i o  A I O
+
+        说明：
+
+              i 当前字符之前插入 (光标前)
+
+              I 行首插入  (行首)
+
+              a 当前字符之后插入 (光标后)
+
+              A 行尾插入(行尾)
+
+              o下一行插入 (另起一行)
+
+              O上一行插入(上一行插入)
+
+              x 向后删除一个字符		等同于delete
+
+              X 向前删除一个字符     	
+
+              u 撤销一步   每按一次就撤销一次
+             
+              r 替换
+
+       2、在命令模式下做的操作：
+
+            光标定位
+
+            hjkl  左下上右
+
+            0 和 home键表示切换到行首， $和end键表示切换到行尾
+
+            gg 快速定位到文档的首行 ,  G定位到未行
+
+            3gg 或者 3G  快速定位到第3行
+
+            /string(字符串)   -----找到或定位你要找的单词或内容，如果相符内容比较多，我们可以通过N、n来进行向上向下查找，并且vi会对查找到的内容进行高亮显示，取消用 :noh
+
+            /^d  ----^意思表示以什么开头 ，，查找以字母d开头的内容
+
+            /t$   -----$意思表示以什么结尾，，查找以字母t结尾的内容
+
+            vim + a.txt  打开文件后，光标会自动位于文件的最后一行   
+
+
+            如何对文本进行编辑
+
+            删除、复制、粘贴、撤销
+
+            y 复制（以字符为单位） :表示对单个字符进行复制，如果要复制整行，用yy（以行为单位）   
+
+            复制N行： Nyy  ，比如： 2yy ，表示复制2行
+
+            dd（删除，以行为单位，删除当前光标所在行）
+
+            删除N行： Ndd  ，比如： 2dd ，表示删除2行
+
+            p ： P粘贴
+
+            剪切： dd
+
+
+            x 删除光标所在位置的字符
+
+            D 从光标处删除到行尾
+
+            u  撤销操作 
+
+            ctrl+r  还原撤销过的操作，将做过的撤销操作再还原回去，也就是说撤销前是什么样，再还原成什么样
+
+            r 替换，或者说用来修改一个字符
+
+
+           总结：vim如何进入其它模式
+
+           a A  o O  i I 都是可以进行插入，编辑模式
+
+           ： 进入命令行模式
+
+           v 进入可视模式
+
+           ctrl+v 进入可视块模式
+
+           V 进入可视行模式
+
+           R 擦除、改写，进入替换模式
+
+           你进入以上模式后，想要退出 ，按esc
+
+
+           扩展：插入模式中的操作
+
+           ctrl+p可以进行补全操作,所需要的内容必须是在当前打开的文件内存在的，它只针对当前文件
+
+
+         3、 V模式（列）
+
+           进入v模式 移动光标选择区域、
+
+           编程的时候需要进行多行注释：
+
+	   1)、ctrl+v 进入列编辑模式
+
+	   2)、向下或向上移动光标，把需要注释、编辑的行的开头选中起来
+
+	   4)、然后按大写的I
+
+	   5)、再插入注释符或者你需要插入的符号,比如"#"
+
+	   6)、再按Esc,就会全部注释或添加了
+
+           删除：再按ctrl+v 进入列编辑模式；向下或向上移动光标 ；选中注释部分,然后按d, 就会删除注释符号。
+
+            
+          4、 命令行模式操作
+                  :w 保存 save
+                  :w! 强制保存
+                  :q 没有进行任何修改，退出 quit
+                  :q! 修改了，不保存，强制退出
+                  :wq 保存并退出 
+                  :wq! 强制保存并退出
+                  :x 保存退出
+                  例: wq! 强制保存并退出
+                  [root@xuegod63 ~]# ll /etc/shadow
+                  ----------. 1 root root 1179 9月  19 12:57 /etc/shadow
+                  [root@xuegod63 ~]# vim /etc/shadow
+
+                  调用外部文件或命令
+
+                  假设：我想要写入我的网卡MAC地址,,我要查看一下,当前在vim编辑文档，照着写。这样好麻烦。
+
+                  在命令行模式下操作：
+
+                  :!ifconfig	调用系统命令
+
+                  !+命令
+
+                  读取其他文件。（把其他文件中的内容追加到当前文档中）
+  
+                  :r /etc/hosts
+
+                  文本替换
+
+                     格式 : 范围（其中%所有内容）   s分隔符 旧的内容 分隔符 新的内容  （分隔符可以自定义）
+
+                     默认是每一行的第一个符合要求的词   (/g全部)
+
+                     :1,3 s/bin/xuegod    替换第1到3行中出现的第一个bin进行替换为xuegod
+
+                     :1,3 s/bin/xuegod/g  替换第1到3行中查找到所有的bin进行替换为xuegod
+
+                     :3 s/xue/aaaaa     #只把第3行中内容替换了
+
+                     :% s/do/xuegod/g  	将文本中所有的do替换成xuegod
+
+                     :% s/do/xuegod/gi	将文本中所有的do替换成xuegod, 并且忽略do的大小写
+
+                     :% s@a@b@g	   将文本中所有的a替换成b
+
+          5、自定义vim使用环境
+
+
+                  1、 临时设置
+                 
+                   :set nu  设置行号
+
+                   :set nonu 取消设置行号
+
+                   :noh   取消高亮显示
+
+                   永久设置环境
+
+                   vim /etc/vimrc  设置后会影响到系统所有的用户
+                             ~
+                   /.vimrc   #在用户的家目录下，创建一个.vimrc。这样只影响到某一个用户，没有自己建一个
+                     例：
+                          [root@xuegod63 ~]# cat  /root/.vimrc  
+                                           set nu
+
+                          [root@xuegod63 ~]# vim  /root/.vimrc
+
+                  
+                  2、vim打开多个文件
+                  
+                  方法1：以上下形势，打开两个文档
+
+                  [root@xuegod63 ~]# vim -o /etc/passwd /etc/hosts
+
+               
+                  方法2：以左右方式打开两个文档
+
+                    [root@xuegod63 ~]# vim -O /etc/passwd /etc/hosts
+
+                    注：ctrl+ww  在两文档之间进行切换编辑。大写O左右分屏，小写的o上下分屏
+
+
+                 3、 比较两个文件内容
+
+                               [root@xuegod63 ~]# cp /etc/passwd mima.txt
+
+                               [root@xuegod63 ~]# echo aaa >> mima.txt 
+
+                               [root@xuegod63 ~]# diff /etc/passwd mima.txt 
+                                             40a41
+                                              > aaa
+
+                               [root@xuegod63 ~]# vimdiff /etc/passwd mima.txt
+
+
+       6、其它编辑器
+
+          nano编辑器
+
+          emacs编辑器
+
+          GHOME编辑器gedit
+ 
+               例：
+
+                    [root@xuegod63 ~]# gedit /etc/passwd
+
+
+        
+25、 实战1：在windows中编辑好的汉字文本文档，上传到Linux下打开乱码。
+
+            实验环境：centos7.4 现在系统默认使用的语言是汉语。（系统中必须安装好中文包）。
+
+            将同目录下“a此文件在windows下打开正常-到linux下vim打开是乱码.txt”上传到Linux服务器上。使用ssh远程连接到Linux上，使用vim打开显示乱码。
+
+                原因：编码的问题
+
+                    通过iconv命令转码   没有使用过：1
+
+                         参数：
+
+                                -f, --from-code=名称 原始文本编码
+
+                                -t, --to-code=输出编码
+
+                                -o, --output=FILE 输出文件名
+
+                          [root@xuegod63 ~]# mkdir test  #创建一个测试目录
+
+                          [root@xuegod63 ~]# cd test/
+
+                          将测试的文件上传到Linux服务器上：
+
+      
+                    [root@xuegod63 ~]# iconv -f gb2312  -t utf8 a此文件在windows下打开正常-到linux下vim打开是乱码.txt  -o aa.txt
+
+                    [root@xuegod63 ~]# cat aa.txt 
+
+                    #!/bin/bash
+
+                    echo "学神IT"
+
+                    信息：
+
+                    -l, --list 列举所有已知的字符集
+
+
+26、  实战2：解决将公司Linux服务器上脚本导到windows上打开串行的问题
+
+                   原因：因为windows和linux处理回车方法不同。
+
+                   上传” b在Linux编辑的文档到windows下没有换行.sh” 到Linux上，打开后正常显示
+
+                   [root@localhost test]# sz b在Linux编辑的文档到windows下没有换行.sh   #发送到本地
+
+                   在window 上打开显示：
+
+
+                        解决方法：
+
+                    [root@xuegod63 ~]# rpm -ivh /mnt/Packages/dos2unix-6.0.3-7.el7.x86_64.rpm
+
+                    注： 在centos7上，unix2dos这个命令已经被集成到dos2unix-6.0.3-7.el7.x86_64.rpm包中。在centos6下需要安装unix2dos.xxx.rpm。
+
+                    [root@localhost test]# unix2dos b在Linux编辑的文档到windows下没有换行.sh
+
+                    [root@localhost test]# sz b在Linux编辑的文档到windows下没有换行.sh   #发送到windows本地  显示正常。
+
+                    注：dos2unix 这个命令是把windows下的回车转成linux类型。
+
+           
+
+
+     
+
+
+
+
+    
+
+     
+
+  
+         
+
+         
+
+
+
+   
+        
+
+       
+       
+       
+
+       
+
+       
+      
+
+      
+
+   
+
+   
+       
+                
+
+
+
+
+
+
+
+
+ 
+             
+
+        
+
+            
+
+
+ 
+       
+        
+ 
+
+
+  
+    
+  
+ 
+
+
+   
+  
+
+   
+
+
+
+
+
+
+ 
+ 
+
+    
+
+     
+
+      

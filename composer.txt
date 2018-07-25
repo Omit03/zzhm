@@ -1,0 +1,186 @@
+1、介绍
+
+    是PHP用来管理依赖（dependency）关系的工具，可以在自己项目中申明所依赖的外部工具库(libraries)，composer 会帮你安装这些依赖的库文件
+
+2、理解
+
+   如果PHP 是win 操作系统，那么composer就是查毒软件的软件管家
+
+   如果PHP 是Linux操作系统，那么composer 就是yum
+
+   之前项目中需要发送邮件，导入导出表格，验证码等工具库，必须自己去网上下载，然后整合到项目中
+
+   现在  通过composer 命名安装自动整合到项目中
+
+3、总结
+
+    Composer是为PHP准备的软件管家，项目所需要的工具库都可以通过composer下载
+
+    官网
+
+       官方网站 https://getcomposer.org     安装下载composer用
+       
+       中文网站 http://www.phpcomposer.com   学习 切换镜像
+
+       仓库地址：https:packagist.org/        存放工具库的仓库
+
+4、安装
+
+     方法一 下载并安装（不推荐）
+
+          下载composer-setup.exe 文件安装
+
+          好处：傻瓜式、安装简单（直接双击下一步即可）
+
+          坏处：相对容易报错，并且仅支持win操作系统使用
+
+          步骤
+
+           1、下载 https://getcomposer.org/download/
+  
+           2、双击安装
+ 
+           3、指定php.exe 文件路径g:xampp/php/php.exe
+
+           4、安装完毕之后通过 win+r 打开运行窗口 在运行窗口输入cmd窗口 接着输入composer
+
+             如果出现composer 图案安装成功
+
+       方法二、说明，下载并安装（推荐使用）
+
+            下载composer.phar 文件安装
+
+            好处：跨平台（支持mac、win、linux使用）
+
+            坏处：不合适新手使用
+
+           步骤1：下载composer.phar 文件 网址 getcomposer.org/download
+
+           步骤2、该文件绿色版（免安装）直接使用
+
+           步骤3、 检查是否安装成功（在dos窗口输入php composer.phar 如果出现composer 图案则安装成功）
+
+
+           检查PHP是否加入环境变量，只有输入下属指令可以查看版本信息才可以使用PHP composer
+
+           留意：安装最低版本必须是php5.3+ 并且开启php_openssl.dll扩展
+
+5、针对第二种方法 简化composer 命令
+
+     复杂 : php composer.phar
+
+     简化：composer
+
+     解决：
+    
+         1、将composer.phar 放到tools/composer 文件中
+
+         2、打开dos窗口进入到tools/composer 文件夹中 然后指定 echo @php "%~dp0composer.phar" %*>composer.bat  执行上面命令会在对应目录下创建一个.bat文件
+
+该文件时 win 下可执行文件，后期直接运行该文件即可；
+            
+
+          注意：必须通过dos窗口进入到composer.phar 统计目录下执行 echo z指令
+
+         3、设置环境变量
+
+           定义：就是当你DOS窗口输入命令时候，它回去环境变量中查找有没有可执行的文件
+
+ ：有 直接执行 ，没有 - 提示不是内部命令
+
+6、常用命令
+
+   1、下载1：composer require 工具库名称
+
+   2、下载2：设置composer.json 文件  + composer install
+
+   3、更新1：composer update 工具库名称
+
+   4、更新2：设置composer.json + composer update
+
+   5、卸载1：composer remove 工具库名称
+
+   6、卸载2：设置composer.json 文件  + composer update
+
+7、初体验（使用composer 下载打印扩展包 appbolaget/dd）
+
+   步骤一：本地创建shop项目目录（模拟实战项目开发使用第三方工具库）
+
+   步骤二 打开dos 窗口 进入shop 目录
+
+   步骤三 通过上述命令 下载第三方工具（composer require 工具名称）composer 软件管家后期下载的所有工具库都在Vendor文件中
+
+   步骤四：使用 只需引用 require './vendor/autoload.php';即可
+
+8、 更新操作
+
+    步骤一：先下载appbolaget/dd=1.0.0 文件
+
+    步骤二：打开composer.json文件 将1.0.0改为1.1
+
+    步骤三  通过【composer update】 更新即可
+
+9、删除操作
+
+   通过【composer remove + 文件名】如composer remove appbolaget/dd
+
+10、创建自己的composer包
+
+    1、自定义包介绍
+
+       创建自己的包如 dd打印
+       
+       注意：目前市面上的框架都内置快速打印方法，这边仅为了学习如何创建工具库，而产生的需求
+
+    2、实现流程
+
+       本地开发工具库功能
+
+       步骤一 创建功能文件（这里指需求）
+
+       步骤二 创建composer.json 文件声明工具库相关信息
+
+       步骤三 通过composer install 建立依赖并测试，有问题-则修改 没问题 - 上线
+
+11、问：为什么下载工具库会自动创建composer.json 和 composer.lock
+
+    答
+
+    注 明确通过composer 下载的工具库会自动在vendor目录中
+
+12、认识composer.json 说明
+
+    1、作用
+
+     composer.json 文件相当于composer软件关键的配置文件，改文件中包含了项目依赖的工具包等信息
+
+     依据：要开始在你的项目中使用composer,只需要一个composer.json文件，改文件包含了项目的依赖和其他的一些元数据
+
+     
+13、packagist.org (工具库)->每周一次去--》 github 抓取数据 所以会延迟一周（如果想实时拿到需要设置fix service hook ） 
+
+    -->中国镜像（其实就是中国服务器）每分钟 更新一次 
+     
+
+14、中国镜像的作用：缓存composer 软件管家在线仓库里面所有的工具库到中国服务器，通过修改composer.json文件配置中国镜像，后期可以加快下载工具库速度（因为直接去中国服务器下载）
+
+    
+
+   
+
+   
+
+
+
+   
+
+   
+
+           
+   
+
+   
+
+
+            
+

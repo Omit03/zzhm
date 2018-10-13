@@ -1,7 +1,7 @@
       准备工作：下载路径https://gitforwindows.org/  一路next。  注册git 在线仓库的账号  国外 有www.github.com  国内 git.oschina.net。
  1、
 
-      打开 窗口 告诉是谁 git config --global user.name zjq003 
+      打开 窗口 告诉是谁 git config --global user.name Omit03 
 
       git config --global user.email 1049219433@qq.com
 
